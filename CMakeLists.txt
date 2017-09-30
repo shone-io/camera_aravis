@@ -5,6 +5,7 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/CMakeModu
 find_package(catkin REQUIRED COMPONENTS roscpp sensor_msgs image_transport camera_info_manager dynamic_reconfigure driver_base tf dynamic_reconfigure)
 find_package(Aravis REQUIRED)
 find_package(GLIB2 REQUIRED)
+find_package(OpenCV REQUIRED)
 
 generate_dynamic_reconfigure_options(cfg/CameraAravisConfig.cfg)
 catkin_package(
@@ -14,11 +15,12 @@ catkin_package(
     LIBRARIES
 )
 
-include_directories(cfg/cpp ${catkin_INCLUDE_DIRS} ${Aravis_INCLUDE_DIRS} ${GLIB2_INCLUDE_DIRS})
+include_directories(cfg/cpp ${catkin_INCLUDE_DIRS} ${Aravis_INCLUDE_DIRS} ${GLIB2_INCLUDE_DIRS} ${OpenCV_INCLUDE_DIRS})
 
 message(${Aravis_LIBRARIES})
+message(${OpenCV_INCLUDE_DIRS})
 
 add_executable(camnode src/camnode.cpp)
 
-target_link_libraries(camnode ${catkin_LIBRARIES} ${Aravis_LIBRARIES} glib-2.0 gmodule-2.0 gobject-2.0)
+target_link_libraries(camnode ${catkin_LIBRARIES} ${Aravis_LIBRARIES} glib-2.0 gmodule-2.0 gobject-2.0 ${OpenCV_LIBRARIES})
 add_dependencies(camnode ${PROJECT_NAME}_gencfg)

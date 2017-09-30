@@ -28,6 +28,8 @@
 
 #include <glib.h>
 
+#include <opencv2/imgproc/imgproc.hpp>
+
 #include <ros/ros.h>
 #include <ros/time.h>
 #include <ros/duration.h>
@@ -551,7 +553,22 @@ static void NewBuffer_callback (ArvStream *pStream, ApplicationData *pApplicatio
 			global.ppubInt64->publish(msgInt64);
 			rm = rn;
 #endif
-			
+            if(strcmp(global.pszPixelformat, "bayerrg8") == 0){
+                const cv::Mat rawBayerImage(global.heightRoi, global.widthRoi, CV_8UC1, &this_data[0]);
+                cv::Mat rawRgbImage(global.heightRoi, global.widthRoi, CV_8UC3);
+                cv::cvtColor(rawBayerImage, rawRgbImage, cv::COLOR_BayerRG2RGB);
+
+                const std::vector<uint8_t> rgbImageVector(rawRgbImage.data, rawRgbImage.data + global.heightRoi*global.widthRoi*3);
+                msg.encoding = "rgb8";
+                msg.step = global.widthRoi * 3;
+                msg.data = rgbImageVector;
+                
+            } else {
+                msg.encoding = global.pszPixelformat;
+                msg.step = global.widthRoi * global.nBytesPixel;
+                msg.data = this_data;
+            }
+            
 			// Save prior values.
 			cm = cn;
 			tm = tn;
@@ -563,9 +580,6 @@ static void NewBuffer_callback (ArvStream *pStream, ApplicationData *pApplicatio
 			msg.header.frame_id = global.config.frame_id;
 			msg.width = global.widthRoi;
 			msg.height = global.heightRoi;
-			msg.encoding = global.pszPixelformat;
-			msg.step = msg.width * global.nBytesPixel;
-			msg.data = this_data;
 
 			// get current CameraInfo data
 			global.camerainfo = global.pCameraInfoManager->getCameraInfo();
